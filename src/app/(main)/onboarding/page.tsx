@@ -3,37 +3,13 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle, Disc3, Droplets, الشمس, Seedling,铲子 } from "lucide-react"; // Replaced Wind with Disc3 (generic), Sun with الشمس (arabic for sun), Shovel with 铲子 (chinese for shovel) as placeholders
+import { CheckCircle, Disc3, Droplets, Sun, Sprout } from "lucide-react";
 import Image from "next/image";
-
-// Placeholder for Shovel icon as it's not in Lucide. Using a generic one.
-// You might want to replace this with an actual SVG or a different Lucide icon.
-const ShovelIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 22v-5l5-5 5 5L2 22Z"/>
-    <path d="M17 2l5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2"/>
-    <path d="m18 11 4 4"/>
-  </svg>
-);
-
-
-const SunIcon = الشمس; // Using the imported Lucide icon
 
 const steps = [
   {
-    title: "1. Persiapan Benih & Media Tanam",
-    icon: Seedling,
-    details: [
-      "Pilih benih Sawi Hijau berkualitas baik.",
-      "Siapkan media tanam: campuran tanah subur, kompos, dan pupuk kandang (perbandingan 2:1:1).",
-      "Gunakan pot atau polybag dengan drainase yang baik, minimal diameter 20cm.",
-    ],
-    image: "https://picsum.photos/seed/picsum/400/200",
-    aiHint: "seeds soil"
-  },
-  {
     title: "2. Penyemaian Benih",
-    icon: ShovelIcon,
+    icon: Sprout,
     details: [
       "Rendam benih Sawi Hijau dalam air hangat selama 1-2 jam sebelum tanam.",
       "Buat lubang tanam sedalam 0.5 - 1 cm pada media tanam.",
@@ -56,7 +32,7 @@ const steps = [
   },
   {
     title: "4. Pemindahan & Penyinaran",
-    icon: SunIcon,
+    icon: Sun,
     details: [
       "Setelah tanaman memiliki 3-4 daun sejati (sekitar 2-3 minggu), pindahkan ke pot yang lebih besar jika diperlukan atau lakukan penjarangan.",
       "Kenalkan tanaman pada sinar matahari penuh secara bertahap.",
@@ -83,7 +59,7 @@ export default function OnboardingPage() {
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardHeader className="text-center">
-          <Seedling className="mx-auto h-16 w-16 text-primary mb-2" />
+          {/* <Seedling className="mx-auto h-16 w-16 text-primary mb-2" /> */}
           <CardTitle className="text-3xl font-bold text-primary">Panduan Menanam Sawi Hijau</CardTitle>
           <CardDescription className="text-lg text-muted-foreground">
             Ikuti langkah-langkah mudah ini untuk memulai kebun Sawi Hijau Anda!
@@ -132,7 +108,7 @@ export default function OnboardingPage() {
         <CardContent className="space-y-2 text-sm">
             <p className="flex items-start gap-2"><Droplets className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" /> <strong>Penyiraman:</strong> Siram secara teratur, terutama saat musim kemarau. Pastikan tanah lembab, bukan becek.</p>
             <p className="flex items-start gap-2"><Disc3 className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" /> <strong>Hama & Penyakit:</strong> Periksa tanaman secara rutin. Gunakan pestisida nabati jika diperlukan.</p>
-            <p className="flex items-start gap-2"><SunIcon className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" /> <strong>Suhu Ideal:</strong> Sawi tumbuh baik pada suhu 15-25°C.</p>
+            <p className="flex items-start gap-2"><Sun className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" /> <strong>Suhu Ideal:</strong> Sawi tumbuh baik pada suhu 15-25°C.</p>
         </CardContent>
       </Card>
     </div>

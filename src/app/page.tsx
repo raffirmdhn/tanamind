@@ -12,10 +12,11 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading) {
+      console.log('user-page', user)
       if (user) {
         router.replace('/dashboard');
       } else {
-        router.replace('/auth/login');
+        router.replace('/login');
       }
     }
   }, [user, loading, router]);

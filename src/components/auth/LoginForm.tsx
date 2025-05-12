@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { auth, googleAuthProvider } from '@/lib/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,7 +56,7 @@ export default function LoginForm() {
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {
-      await signInWithPopup(auth, googleAuthProvider);
+      await signInWithRedirect(auth, googleAuthProvider);
       toast({ title: "Login Google Berhasil!", description: "Selamat datang." });
       router.push('/dashboard');
     } catch (error: any) {
