@@ -25,7 +25,7 @@ export default function TopNav() {
       <header className="sticky top-0 z-50 w-full flex flex-col items-center bg-transparent">
         <div className="w-full max-w-[393px] h-[76px] bg-[#328E6E] backdrop-blur flex justify-between items-center px-4 rounded-b-2xl">
           <div className="flex flex-col">
-            <span className="font-bold text-xl text-white leading-tight">{user?.email ? `Hello ${user.email}!` : 'Hello!'}</span>
+            <span className="font-bold text-xl text-white leading-tight">{user?.email ? `Hello ${user.email}!` : 'Hello Yuyun!'}</span>
             {user && <span className="text-white text-sm font-normal">Welcome to Tanamind!</span>}
           </div>
           {!loading && user && (
