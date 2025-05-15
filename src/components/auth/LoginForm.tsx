@@ -1,11 +1,11 @@
 // src/components/auth/LoginForm.tsx
 "use client";
-
+import { useEffect } from 'react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { getRedirectResult, signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth';
 import { auth, googleAuthProvider } from '@/lib/firebase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +53,36 @@ export default function LoginForm() {
     }
   };
 
+  useEffect(() => {
+    console.log("useEffect called")
+    const handleRedirectResult = async () => {
+      console.log("handleRedirectResult called")
+      try {
+        console.log("Trying")
+        const result = await getRedirectResult(auth);
+        if (result) {
+          // User just signed in via redirect, session is set
+          console.log("Redirect sign-in successful:", result.user);
+          toast({ title: "Login Google Berhasil!", description: "Selamat datang." });
+          router.push('/dashboard');
+        }
+        console.log("Result false", result)
+      } catch (error: any) {
+        console.log("Failed")
+        console.error("Error getting redirect result:", error);
+        toast({
+          title: "Login Google Gagal",
+          description: error.message || "Terjadi kesalahan saat login dengan Google.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    handleRedirectResult();
+  }, [router, toast]); // Add dependencies as needed
+  
   const handleGoogleSignIn = async () => {
     setLoading(true);
     try {

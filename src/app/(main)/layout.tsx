@@ -9,7 +9,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import { Loader2 } from 'lucide-react';
 
 export default function MainAppLayout({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const auth = useAuth();
   const router = useRouter();
 
   // useEffect(() => {
@@ -35,6 +35,8 @@ export default function MainAppLayout({ children }: { children: ReactNode }) {
   //   // but as a fallback, show loading or nothing.
   //   return null; 
   // }
+
+  // return <pre>{JSON.stringify(auth)}</pre>
 
   return (
     <div className="flex flex-col h-full">

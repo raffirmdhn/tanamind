@@ -1,116 +1,219 @@
-// src/app/(main)/onboarding/page.tsx
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle, Disc3, Droplets, Sun, Sprout } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import Image from "next/image";
 
-const steps = [
-  {
-    title: "2. Penyemaian Benih",
-    icon: Sprout,
-    details: [
-      "Rendam benih Sawi Hijau dalam air hangat selama 1-2 jam sebelum tanam.",
-      "Buat lubang tanam sedalam 0.5 - 1 cm pada media tanam.",
-      "Masukkan 2-3 benih per lubang, lalu tutup tipis dengan tanah.",
-      "Siram perlahan hingga media tanam lembab.",
-    ],
-    image: "https://picsum.photos/seed/planting/400/200",
-    aiHint: "planting seedling"
-  },
-  {
-    title: "3. Perawatan Awal",
-    icon: Droplets,
-    details: [
-      "Letakkan semaian di tempat yang teduh namun tetap mendapat cahaya matahari tidak langsung.",
-      "Jaga kelembaban media tanam, jangan sampai kering atau terlalu basah.",
-      "Benih biasanya akan berkecambah dalam 3-7 hari.",
-    ],
-    image: "https://picsum.photos/seed/watering/400/200",
-    aiHint: "watering plant"
-  },
-  {
-    title: "4. Pemindahan & Penyinaran",
-    icon: Sun,
-    details: [
-      "Setelah tanaman memiliki 3-4 daun sejati (sekitar 2-3 minggu), pindahkan ke pot yang lebih besar jika diperlukan atau lakukan penjarangan.",
-      "Kenalkan tanaman pada sinar matahari penuh secara bertahap.",
-      "Sawi Hijau membutuhkan minimal 4-6 jam sinar matahari langsung per hari.",
-    ],
-    image: "https://picsum.photos/seed/sunlight/400/200",
-    aiHint: "plant sunlight"
-  },
-  {
-    title: "5. Pemupukan & Panen",
-    icon: Disc3, // Placeholder for fertilizer/harvest
-    details: [
-      "Berikan pupuk organik cair setiap 2 minggu sekali setelah tanaman berusia 1 bulan.",
-      "Sawi Hijau umumnya siap panen dalam 30-45 hari setelah tanam.",
-      "Panen dengan memotong pangkal batang atau mencabut seluruh tanaman.",
-    ],
-    image: "https://picsum.photos/seed/harvest/400/200",
-    aiHint: "harvest vegetable"
-  },
-];
+function CardOption({
+  image,
+  label,
+  selected,
+  onClick,
+}: {
+  image: string;
+  label: string;
+  selected?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={`flex flex-col items-center border rounded-lg p-2 w-1/2 cursor-pointer ${
+        selected ? "border-[#328E6E] bg-green-50" : "hover:border-[#328E6E]"
+      }`}
+    >
+      <Image src={image} alt={label} width={100} height={100} className="rounded-md" />
+      <span className="mt-2 font-medium">{label}</span>
+    </div>
+  );
+}
 
 export default function OnboardingPage() {
-  return (
-    <div className="space-y-6">
-      <Card className="shadow-lg">
-        <CardHeader className="text-center">
-          {/* <Seedling className="mx-auto h-16 w-16 text-primary mb-2" /> */}
-          <CardTitle className="text-3xl font-bold text-primary">Panduan Menanam Sawi Hijau</CardTitle>
-          <CardDescription className="text-lg text-muted-foreground">
-            Ikuti langkah-langkah mudah ini untuk memulai kebun Sawi Hijau Anda!
-          </CardDescription>
-        </CardHeader>
-      </Card>
+  const router = useRouter();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [checked, setChecked] = useState<{ [key: number]: boolean[] }>({});
+  const [plantName, setPlantName] = useState("");
+  const [selectedVariety, setSelectedVariety] = useState<string | null>(null);
 
-      <Accordion type="single" collapsible className="w-full">
-        {steps.map((step, index) => (
-          <AccordionItem value={`item-${index}`} key={index}>
-            <AccordionTrigger className="text-lg hover:no-underline">
-              <div className="flex items-center gap-3">
-                <step.icon className="h-6 w-6 text-secondary" />
-                <span>{step.title}</span>
+  const next = () => setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+  const prev = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
+
+  const stepImages: { [key: number]: string } = {
+    1: "/assets/images/logo8.svg",
+    2: "/assets/images/logo10.svg",
+    3: "/assets/images/logo11.svg",
+    4: "/assets/images/logo14.svg",
+  };
+
+  const stepInfos: { [key: number]: string } = {
+    0: "Choose a Mustard Green Variety",
+    1: "Prepare Tools and Materials",
+    2: "Prepare Planting Media",
+    3: "Give your plant a name",
+    4: "You're Done!",
+  };
+
+  const steps = [
+    {
+      content: (
+        <div className="flex gap-4 mt-11">
+          <CardOption
+            image="/assets/images/logo10.svg"
+            label="Sawi Hijau"
+            selected={selectedVariety === "Sawi Hijau"}
+            onClick={() => setSelectedVariety("Sawi Hijau")}
+          />
+          <CardOption
+            image="/assets/images/logo11.svg"
+            label="Sawi Putih"
+            selected={selectedVariety === "Sawi Putih"}
+            onClick={() => setSelectedVariety("Sawi Putih")}
+          />
+        </div>
+      ),
+    },
+    {
+      content: <CheckboxList step={1} checked={checked} setChecked={setChecked} />,
+    },
+    {
+      content: (
+        <CheckboxList
+          step={2}
+          checked={checked}
+          setChecked={setChecked}
+          items={["Fertilizer ratio: 1:2", "Mix using MSG"]}
+        />
+      ),
+    },
+    {
+      content: (
+        <div className="flex flex-col gap-1 mt-4">
+          <label className="text-sm font-semibold text-gray-700">Plant Name</label>
+          <Input
+            placeholder="Sawi Name"
+            value={plantName}
+            onChange={(e) => setPlantName(e.target.value)}
+            className="font-semibold text-black border-[#328E6E] focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
+        </div>
+      ),
+    },
+    {
+      success: true,
+    },
+  ];
+
+  const step = steps[currentStep];
+
+  return (
+    <div className="flex flex-col min-h-screen max-w-md mx-auto w-[393px] h-[852px] relative">
+      <div className="flex-1 overflow-y-auto p-6 pb-40">
+        {/* Header */}
+        <div className="relative flex items-center justify-center mb-4">
+          <button
+            onClick={() => router.push("/main/dashboard-temp")}
+            className="absolute left-0 text-[#328E6E] text-2xl font-bold cursor-pointer"
+          >
+            &lt;
+          </button>
+          <span className="text-sm text-black font-medium text-center">
+            {stepInfos[currentStep]}
+          </span>
+        </div>
+
+        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="h-full transition-all"
+            style={{
+              width: `${(currentStep / (steps.length - 1)) * 100}%`,
+              backgroundColor: "#328E6E",
+            }}
+          />
+        </div>
+
+        {step?.title && <h1 className="text-center text-xl font-bold mt-6">{step?.title}</h1>}
+
+        {currentStep > 0 && currentStep <= 4 && (
+          <div className="flex flex-col items-center my-2">
+            {currentStep === 4 && (
+              <div className="text-center font-semibold text-sm text-[#328E6E] mb-2">
+                Yay! You've successfully planted!
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="space-y-3 px-1 pt-2">
-              {step.image && (
-                <div className="w-full h-40 relative rounded-md overflow-hidden my-2">
-                  <Image 
-                    src={step.image} 
-                    alt={step.title} 
-                    layout="fill" 
-                    objectFit="cover" 
-                    className="rounded-md"
-                    data-ai-hint={step.aiHint}
-                  />
-                </div>
-              )}
-              <ul className="list-none space-y-2 pl-2">
-                {step.details.map((detail, detailIndex) => (
-                  <li key={detailIndex} className="flex items-start gap-2 text-sm">
-                    <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <span>{detail}</span>
-                  </li>
-                ))}
-              </ul>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-       <Card>
-        <CardHeader>
-          <CardTitle>Tips Tambahan</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-            <p className="flex items-start gap-2"><Droplets className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" /> <strong>Penyiraman:</strong> Siram secara teratur, terutama saat musim kemarau. Pastikan tanah lembab, bukan becek.</p>
-            <p className="flex items-start gap-2"><Disc3 className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" /> <strong>Hama & Penyakit:</strong> Periksa tanaman secara rutin. Gunakan pestisida nabati jika diperlukan.</p>
-            <p className="flex items-start gap-2"><Sun className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" /> <strong>Suhu Ideal:</strong> Sawi tumbuh baik pada suhu 15-25°C.</p>
-        </CardContent>
-      </Card>
+            )}
+            <Image
+              src={stepImages[currentStep] || "/assets/images/logo12.svg"}
+              alt={`Step ${currentStep} Illustration`}
+              width={180}
+              height={180}
+            />
+          </div>
+        )}
+
+        <div className="space-y-4 mt-4">{step.content}</div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 px-4 pb-4 space-y-2 max-w-md mx-auto">
+        <button
+          onClick={currentStep < steps.length - 1 ? next : () => setCurrentStep(0)}
+          className="w-full bg-[#328E6E] hover:bg-[#28735a] text-white py-3 rounded-md font-medium text-sm"
+        >
+          {currentStep === 3
+            ? "Plant Now"
+            : currentStep < steps.length - 1
+            ? "Next"
+            : "Back to Home"}
+        </button>
+
+        {currentStep !== 0 && currentStep !== 4 && (
+          <button
+            onClick={prev}
+            className="w-full text-sm font-medium py-2 text-gray-500 hover:text-gray-600"
+          >
+            Previous
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CheckboxList({
+  step,
+  checked,
+  setChecked,
+  items = ["Prepare the polybag", "Prepare the fertilizer", "Watering tool"],
+}: {
+  step: number;
+  checked: { [key: number]: boolean[] };
+  setChecked: React.Dispatch<React.SetStateAction<{ [key: number]: boolean[] }>>;
+  items?: string[];
+}) {
+  return (
+    <div className="space-y-3">
+      {items.map((item, i) => (
+        <label
+          key={i}
+          className={`flex items-center gap-3 justify-between ${
+            step === 1 || step === 2 ? "flex-row-reverse" : ""
+          }`}
+        >
+          <Checkbox
+            checked={checked[step]?.[i] || false}
+            onCheckedChange={(val) => {
+              const updatedChecks = [...(checked[step] || [])];
+              updatedChecks[i] = !!val;
+              setChecked((prev) => ({
+                ...prev,
+                [step]: updatedChecks,
+              }));
+            }}
+            className="data-[state=checked]:bg-[#328E6E] data-[state=checked]:border-[#328E6E]"
+          />
+          <span>{item}</span>
+        </label>
+      ))}
     </div>
   );
 }

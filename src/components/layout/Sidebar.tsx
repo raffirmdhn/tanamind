@@ -1,20 +1,16 @@
+// app/layout/sidebar.tsx
 "use client";
 
-import Link from 'next/link';
 import { Menu, LogOut, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { useRouter, usePathname } from 'next/navigation'; // 👈 Tambah usePathname
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export default function TopNav() {
+export default function Sidebar() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname(); // 👈 Ambil path saat ini
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  // 👇 Jangan tampilkan di halaman onboarding
-  if (pathname === "/onboarding") return null;
 
   const handleLogout = async () => {
     await logout();
@@ -23,23 +19,7 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-[#328E6E] backdrop-blur">
-        <div className="container flex h-16 items-center justify-between max-w-md mx-auto px-4">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="font-bold text-xl text-white">Hello Yuyun!</span>
-          </Link>
-
-          {!loading && user && (
-            <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => {
-              setIsMenuOpen(true);
-            }}>
-              <Menu className="text-white h-6 w-6" />
-            </Button>
-          )}
-        </div>
-      </header>
-
-      {/* Sidebar drawer */}
+      {/* Sidebar Drawer */}
       <div
         className={`fixed top-0 right-0 h-full w-1/2 bg-white z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
           isMenuOpen ? 'translate-x-0' : 'translate-x-full'

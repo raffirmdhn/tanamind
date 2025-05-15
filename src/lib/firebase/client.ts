@@ -1,6 +1,6 @@
 // src/lib/firebase/client.ts
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { connectAuthEmulator, getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -19,5 +19,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const googleAuthProvider = new GoogleAuthProvider();
+// connectAuthEmulator(auth, "https://9000-firebase-studio-1746965857512.cluster-bg6uurscprhn6qxr6xwtrhvkf6.cloudworkstations.dev");
 
 export { app, auth, db, storage, googleAuthProvider };
