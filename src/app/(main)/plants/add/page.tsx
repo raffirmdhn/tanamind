@@ -1,32 +1,42 @@
 // src/app/(main)/plants/add/page.tsx
 "use client";
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/lib/firebase/client';
-import type { Plant } from '@/types';
-import { CalendarIcon, Sprout, Image as ImageIcon, FileText, ArrowLeft } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { db, storage } from "@/lib/firebase/client";
 import { cn } from "@/lib/utils";
-import { Textarea } from '@/components/ui/textarea';
-import Image from 'next/image';
-
+import type { Plant } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { ArrowLeft, CalendarIcon, Sprout } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 const plantSchema = z.object({
   name: z.string().min(3, { message: "Nama tanaman minimal 3 karakter." }),
-  species: z.string().min(3, { message: "Spesies tanaman minimal 3 karakter." }).default("Sawi Hijau"),
+  species: z
+    .string()
+    .min(3, { message: "Spesies tanaman minimal 3 karakter." })
+    .default("Sawi Hijau"),
   datePlanted: z.date({ required_error: "Tanggal tanam wajib diisi." }),
   notes: z.string().optional(),
   photo: z.instanceof(FileList).optional(),
@@ -44,10 +54,10 @@ export default function AddPlantPage() {
   const form = useForm<PlantFormValues>({
     resolver: zodResolver(plantSchema),
     defaultValues: {
-      name: '',
-      species: 'Sawi Hijau',
+      name: "",
+      species: "Sawi Hijau",
       datePlanted: new Date(),
-      notes: '',
+      notes: "",
     },
   });
 
@@ -55,13 +65,17 @@ export default function AddPlantPage() {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       setImagePreview(URL.createObjectURL(file));
-      form.setValue('photo', event.target.files);
+      form.setValue("photo", event.target.files);
     }
   };
 
   const onSubmit = async (data: PlantFormValues) => {
     if (!user) {
-      toast({ title: "Error", description: "Anda harus login untuk menambah tanaman.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Anda harus login untuk menambah tanaman.",
+        variant: "destructive",
+      });
       return;
     }
     setLoading(true);
@@ -75,24 +89,29 @@ export default function AddPlantPage() {
         photoURL = await getDownloadURL(snapshot.ref);
       } catch (error) {
         console.error("Error uploading photo: ", error);
-        toast({ title: "Upload Foto Gagal", description: "Gagal mengunggah foto tanaman.", variant: "destructive" });
+        toast({
+          title: "Upload Foto Gagal",
+          description: "Gagal mengunggah foto tanaman.",
+          variant: "destructive",
+        });
         setLoading(false);
         return;
       }
     }
 
     try {
-      const plantData: Omit<Plant, 'id'> = {
+      const plantData: Omit<Plant, "id"> = {
         userId: user.uid,
         name: data.name,
         species: data.species,
+        // @ts-expect-error
         datePlanted: serverTimestamp.fromDate(data.datePlanted),
         notes: data.notes,
         photoURL: photoURL,
       };
       await addDoc(collection(db, `users/${user.uid}/plants`), plantData);
       toast({ title: "Tanaman Ditambahkan!", description: `${data.name} berhasil ditambahkan.` });
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (error: any) {
       console.error("Error adding plant:", error);
       toast({
@@ -106,79 +125,121 @@ export default function AddPlantPage() {
   };
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
+    <Card className='w-full max-w-lg mx-auto'>
       <CardHeader>
-         <div className="flex items-center gap-2 mb-2">
-          <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
-            <ArrowLeft className="h-5 w-5" />
+        <div className='flex items-center gap-2 mb-2'>
+          <Button variant='ghost' size='icon' onClick={() => router.back()} className='mr-2'>
+            <ArrowLeft className='h-5 w-5' />
           </Button>
-          <Sprout className="h-8 w-8 text-primary" />
+          <Sprout className='h-8 w-8 text-primary' />
           <div>
-            <CardTitle className="text-2xl">Tambah Tanaman Baru</CardTitle>
+            <CardTitle className='text-2xl'>Tambah Tanaman Baru</CardTitle>
             <CardDescription>Isi detail tanaman Sawi Hijau Anda.</CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nama Tanaman</Label>
-            <Input id="name" placeholder="Mis: Sawi di Pot Merah" {...form.register('name')} />
-            {form.formState.errors.name && <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>}
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+          <div className='space-y-2'>
+            <Label htmlFor='name'>Nama Tanaman</Label>
+            <Input id='name' placeholder='Mis: Sawi di Pot Merah' {...form.register("name")} />
+            {form.formState.errors.name && (
+              <p className='text-sm text-destructive'>{form.formState.errors.name.message}</p>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="species">Spesies</Label>
-            <Input id="species" placeholder="Sawi Hijau" {...form.register('species')} />
-            {form.formState.errors.species && <p className="text-sm text-destructive">{form.formState.errors.species.message}</p>}
+          <div className='space-y-2'>
+            <Label htmlFor='species'>Spesies</Label>
+            <Select
+              defaultValue='Sawi Hijau'
+              onValueChange={value => form.setValue("species", value, { shouldValidate: true })}>
+              <SelectTrigger className='w-full'>
+                <SelectValue placeholder='Pilih Spesies' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='Sawi Hijau'>Sawi Hijau</SelectItem>
+                <SelectItem value='Sawi Putih'>Sawi Putih</SelectItem>
+              </SelectContent>
+            </Select>
+            {form.formState.errors.species && (
+              <p className='text-sm text-destructive'>{form.formState.errors.species.message}</p>
+            )}
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="datePlanted">Tanggal Tanam</Label>
+
+          <div className='space-y-2'>
+            <Label htmlFor='datePlanted'>Tanggal Tanam</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !form.watch('datePlanted') && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {form.watch('datePlanted') ? format(form.watch('datePlanted')!, "PPP", { locale: require('date-fns/locale/id') }) : <span>Pilih tanggal</span>}
+                    !form.watch("datePlanted") && "text-muted-foreground"
+                  )}>
+                  <CalendarIcon className='mr-2 h-4 w-4' />
+                  {format(form.watch("datePlanted"), "PPP", {
+                    locale: id,
+                  })}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className='w-auto p-0'>
                 <Calendar
-                  mode="single"
-                  selected={form.watch('datePlanted')}
-                  onSelect={(date) => form.setValue('datePlanted', date as Date, { shouldValidate: true })}
+                  mode='single'
+                  selected={form.watch("datePlanted")}
+                  onSelect={date =>
+                    form.setValue("datePlanted", date as Date, { shouldValidate: true })
+                  }
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
-            {form.formState.errors.datePlanted && <p className="text-sm text-destructive">{form.formState.errors.datePlanted.message}</p>}
+            {form.formState.errors.datePlanted && (
+              <p className='text-sm text-destructive'>
+                {form.formState.errors.datePlanted.message}
+              </p>
+            )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="photo">Foto Tanaman (Opsional)</Label>
-            <div className="flex items-center gap-4">
+          <div className='space-y-2'>
+            <Label htmlFor='photo'>Foto Tanaman (Opsional)</Label>
+            <div className='flex items-center gap-4'>
               {imagePreview && (
-                <Image src={imagePreview} alt="Preview" width={80} height={80} className="rounded-md object-cover h-20 w-20" data-ai-hint="plant seedling" />
+                <Image
+                  src={imagePreview}
+                  alt='Preview'
+                  width={80}
+                  height={80}
+                  className='rounded-md object-cover h-20 w-20'
+                  data-ai-hint='plant seedling'
+                />
               )}
-              <Input id="photo" type="file" accept="image/*" onChange={handlePhotoChange} className="cursor-pointer" />
+              <Input
+                id='photo'
+                type='file'
+                accept='image/*'
+                onChange={handlePhotoChange}
+                className='cursor-pointer'
+              />
             </div>
-            {form.formState.errors.photo && <p className="text-sm text-destructive">{form.formState.errors.photo.message}</p>}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="notes">Catatan (Opsional)</Label>
-            <Textarea id="notes" placeholder="Catatan tambahan tentang tanaman ini..." {...form.register('notes')} />
-            {form.formState.errors.notes && <p className="text-sm text-destructive">{form.formState.errors.notes.message}</p>}
+            {form.formState.errors.photo && (
+              <p className='text-sm text-destructive'>{form.formState.errors.photo.message}</p>
+            )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Menyimpan...' : 'Simpan Tanaman'}
+          <div className='space-y-2'>
+            <Label htmlFor='notes'>Catatan (Opsional)</Label>
+            <Textarea
+              id='notes'
+              placeholder='Catatan tambahan tentang tanaman ini...'
+              {...form.register("notes")}
+            />
+            {form.formState.errors.notes && (
+              <p className='text-sm text-destructive'>{form.formState.errors.notes.message}</p>
+            )}
+          </div>
+
+          <Button type='submit' className='w-full' disabled={loading}>
+            {loading ? "Menyimpan..." : "Simpan Tanaman"}
           </Button>
         </form>
       </CardContent>

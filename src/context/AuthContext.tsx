@@ -1,13 +1,13 @@
 // src/context/AuthContext.tsx
 "use client";
 
-import type { User as FirebaseUser } from 'firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { auth } from '@/lib/firebase/client';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
-import type { UserProfile } from '@/types'; // Assuming UserProfile type will be defined
+import type { User as FirebaseUser } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { auth } from "@/lib/firebase/client";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase/client";
+import type { UserProfile } from "@/types"; // Assuming UserProfile type will be defined
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -24,24 +24,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        // Fetch user profile from Firestore
-        const userDocRef = doc(db, "users", firebaseUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          setUserProfile(userDocSnap.data() as UserProfile);
+    const unsubscribe = onAuthStateChanged(auth, async firebaseUser => {
+      try {
+        if (firebaseUser) {
+          setUser(firebaseUser);
+          // Fetch user profile from Firestore
+          const userDocRef = doc(db, "users", firebaseUser.uid);
+          // const userDocSnap = await getDoc(userDocRef);
+          // if (userDocSnap.exists()) {
+          //   setUserProfile(userDocSnap.data() as UserProfile);
+          // } else {
+          //   // Potentially create a user profile document here if it doesn't exist
+          //   // For now, setting it to null or a default structure
+          //   setUserProfile(null);
+          // }
         } else {
-          // Potentially create a user profile document here if it doesn't exist
-          // For now, setting it to null or a default structure
-          setUserProfile(null); 
+          setUser(null);
+          setUserProfile(null);
         }
-      } else {
-        setUser(null);
-        setUserProfile(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -70,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
