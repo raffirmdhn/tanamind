@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 
 export default function MainAppLayout({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { loading, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
