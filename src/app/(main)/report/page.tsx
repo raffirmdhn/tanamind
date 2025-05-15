@@ -1,196 +1,171 @@
-'use client';
+"use client";
 
-import { useState, useEffect, Suspense } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { submitGrowthReportAction } from '@/actions/reportActions';
-import { ArrowLeft, Image as ImageIcon, Loader2 } from 'lucide-react';
-import Image from 'next/image';
-import { collection, query, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase/client";
-import type { Plant } from '@/types';
+import React, { useState } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Clock } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
-const reportSchema = z.object({
-  plantId: z.string().min(1, { message: "Pilih tanaman terlebih dahulu." }),
-  plantHeight: z.string().min(1, { message: "Tinggi tanaman wajib diisi." }),
-  leafCount: z.string().min(1, { message: "Jumlah daun wajib diisi." }),
-  environmentalCondition: z.string().min(1, { message: "Kondisi lingkungan wajib diisi." }),
-  photo: z.instanceof(FileList).refine(files => files.length > 0, "Foto tanaman wajib diunggah."),
-});
 
-type ReportFormValues = z.infer<typeof reportSchema>;
-
-export default function ReportPage() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [userPlants, setUserPlants] = useState<Plant[]>([]);
-  const [fetchingPlants, setFetchingPlants] = useState(true);
-
-  const { toast } = useToast();
+const ReportPage = () => {
+  const [showModal, setShowModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [lastWatered, setLastWatered] = useState("3 hours ago");
+  
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const preselectedPlantId = searchParams.get('plantId');
 
-  const form = useForm<ReportFormValues>({
-    resolver: zodResolver(reportSchema),
-    defaultValues: {
-      plantId: preselectedPlantId || '',
-      plantHeight: '',
-      leafCount: '',
-      environmentalCondition: '',
-    },
-  });
+  const handleWaterPlant = () => {
+    setLastWatered("Just now");
+    setShowModal(false);
 
-  useEffect(() => {
-    if (preselectedPlantId) {
-      form.setValue('plantId', preselectedPlantId);
-    }
-  }, [preselectedPlantId, form]);
-
-  useEffect(() => {
-    if (!user) return;
-    setFetchingPlants(true);
-    const plantsRef = collection(db, `users/${user.uid}/plants`);
-    const q = query(plantsRef);
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const plantsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Plant));
-      setUserPlants(plantsData);
-      setFetchingPlants(false);
-      if (plantsData.length > 0 && !preselectedPlantId) {
-        form.setValue('plantId', plantsData[0].id);
-      }
-    }, (error) => {
-      console.error("Error fetching plants:", error);
-      toast({ title: "Error", description: "Gagal memuat daftar tanaman.", variant: "destructive" });
-      setFetchingPlants(false);
-    });
-
-    return () => unsubscribe();
-  }, [user, toast, form, preselectedPlantId]);
-
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0];
-      setImagePreview(URL.createObjectURL(file));
-      form.setValue('photo', event.target.files, { shouldValidate: true });
-    } else {
-      setImagePreview(null);
-      form.setValue('photo', new DataTransfer().files, { shouldValidate: true });
-    }
-  };
-
-  const onSubmit = async (data: ReportFormValues) => {
-    if (!user) {
-      toast({ title: "Error", description: "Anda harus login.", variant: "destructive" });
-      return;
-    }
-    setLoading(true);
-
-    const formData = new FormData();
-    formData.append('plantId', data.plantId);
-    formData.append('plantHeight', data.plantHeight);
-    formData.append('leafCount', data.leafCount);
-    formData.append('environmentalCondition', data.environmentalCondition);
-    formData.append('photo', data.photo[0]);
-    formData.append('userId', user.uid);
-
-    try {
-      const result = await submitGrowthReportAction(formData);
-      if (result.success) {
-        toast({ title: "Berhasil", description: "Laporan pertumbuhan berhasil dikirim." });
-        // Optional reset
-      } else {
-        toast({ title: "Gagal", description: result.error || "Terjadi kesalahan.", variant: "destructive" });
-      }
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message || "Terjadi kesalahan.", variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+    // Tampilkan modal sukses setelah konfirmasi OK
+    setTimeout(() => {
+      setShowSuccessModal(true);
+    }, 300); // sedikit delay biar transisi lebih halus
   };
 
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /><span className="ml-2">Memuat formulir laporan...</span></div>}>
-      {loading && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center text-center px-4">
-          <p className="text-sm mb-4 text-muted-foreground">Hang tight! AI is working on the analysis.</p>
-          <Image
-            src="/assets/images/logo10.svg"
-            alt="AI loading"
-            width={100}
-            height={100}
-            className="mb-6"
-          />
-          <div className="w-40 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-green-500 w-1/3 animate-pulse"></div>
+    <div className="flex flex-col justify-between min-h-screen bg-white px-4 pt-6 pb-4 relative">
+      {/* Header */}
+      <div className="w-full flex items-center justify-between px-2 mb-6">
+        <Link href="/">
+          <span className="text-[#328e6e] text-2xl font-bold cursor-pointer">&lt;</span>
+        </Link>
+        <h2 className="text-base font-medium text-gray-800">Sawi Plant</h2>
+        <div className="w-5 h-5" />
+      </div>
+
+      {/* Gambar Tanaman */}
+      <div className="w-full rounded-2xl overflow-hidden mb-6">
+        <Image
+          src="/assets/images/sawi1.png"
+          alt="Sawi Plant"
+          width={340}
+          height={170}
+          className="w-full h-[170px] object-cover rounded-2xl"
+        />
+      </div>
+
+      {/* Info Penyiraman & Penanaman */}
+      <div className="w-full flex justify-between items-center mb-4">
+        <div className="w-[158px] h-[60px] border border-[#328e6e] rounded-xl flex items-center px-3">
+          <Clock className="w-4 h-4 text-[#328e6e] mr-2" />
+          <div>
+            <p className="text-[11px] text-gray-500">Last watered</p>
+            <p className="text-sm font-medium" style={{ color: '#32866e' }}>{lastWatered}</p>
+          </div>
+        </div>
+        <div className="w-[158px] h-[60px] border border-[#328e6e] rounded-xl flex items-center px-3">
+          <Calendar className="w-4 h-4 text-[#328e6e] mr-2" />
+          <div>
+            <p className="text-[11px] text-gray-500">Planted on</p>
+            <p className="text-sm font-medium" style={{ color: '#32866e' }}>3 May 2025</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Kondisi Tanaman */}
+      <Card className="w-full h-[70px] border border-[#a8ddd1] bg-[#e3f6f1] rounded-xl shadow-sm mb-6">
+        <CardContent className="flex items-center h-full px-4 py-2 gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#328e6e] flex items-center justify-center text-white font-bold text-sm">
+            A
+          </div>
+          <div className="flex flex-col">
+            <p className="text-[12px] text-gray-600 font-medium leading-tight">
+              Your Plant Condition’s
+            </p>
+            <p className="text-sm font-semibold text-[#328e6e] leading-tight">
+              Excellent
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tombol Aksi */}
+      <div className="w-full flex flex-col gap-3">
+        <Button
+          variant="outline"
+          className="w-full border border-[#328e6e] text-[#328e6e] hover:bg-[#e3f6f1] font-medium text-sm rounded-xl h-10"
+          onClick={() => setShowModal(true)}
+        >
+          Water Plant 🪣
+        </Button>
+        <Button
+      onClick={() => router.push('/report')}
+
+          className="w-full bg-[#328e6e] hover:bg-[#28765c] text-white font-medium text-sm rounded-xl h-10"
+        >
+          Report Growth Plant 📈
+        </Button>
+      </div>
+
+      {/* Modal Konfirmasi Penyiraman */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div
+            className="bg-white rounded-xl p-5 shadow-md relative"
+            style={{ width: "395px", height: "171px" }}
+          >
+            <button
+              className="absolute top-2 right-3 text-gray-500 text-xl"
+              onClick={() => setShowModal(false)}
+            >
+              ×
+            </button>
+            <h3 className="text-sm font-semibold text-gray-800 mb-1 text-center w-full">
+              Did you water the plant?
+            </h3>
+            <div className="flex justify-center gap-3 absolute bottom-4 left-0 right-0">
+              <Button
+                variant="outline"
+                className="w-[143px] h-[33.3px] border border-gray-300 text-gray-700 rounded-md"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="w-[143px] h-[33.3px] bg-[#328e6e] hover:bg-[#28765c] text-white rounded-md"
+                onClick={handleWaterPlant}
+              >
+                OK
+              </Button>
+            </div>
           </div>
         </div>
       )}
 
-      <Card className="w-full max-w-sm mx-auto">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={() => router.back()}>
-              <ArrowLeft className="h-5 w-5" />
+      {/* Modal Success Watered */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-5 shadow-md text-center relative" style={{ width: "359px", height: "342px" }}>
+            <button
+              className="absolute top-2 right-3 text-gray-500 text-xl"
+              onClick={() => setShowSuccessModal(false)}
+            >
+              ×
+            </button>
+            <h3 className="text-sm font-semibold text-gray-800 mb-1">Successfully Watered!</h3>
+            <p className="text-xs text-gray-500 mb-4">Thank you for watering the plant!</p>
+            <Image
+              src="/assets/images/logo10.svg"
+              alt="Success"
+              width={200}
+              height={200}
+              className="mx-auto my-4"
+            />
+            <Button
+              className="w-[317px] h-[33.3px] bg-[#328e6e] hover:bg-[#28765c] text-white font-medium text-sm rounded-md absolute left-1/2 -translate-x-1/2 bottom-6"
+              onClick={() => setShowSuccessModal(false)}
+            >
+              OK
             </Button>
-            <CardTitle className="text-lg">Track Growth Progress</CardTitle>
           </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            <div>
-              <Label htmlFor="plantHeight">Plant Height</Label>
-              <Input id="plantHeight" placeholder="0 cm" {...form.register('plantHeight')} />
-              {form.formState.errors.plantHeight && <p className="text-sm text-destructive">{form.formState.errors.plantHeight.message}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="leafCount">Number of Leaves</Label>
-              <Input id="leafCount" placeholder="0 leaf" {...form.register('leafCount')} />
-              {form.formState.errors.leafCount && <p className="text-sm text-destructive">{form.formState.errors.leafCount.message}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="environmentalCondition">Environmental Condition</Label>
-              <Textarea id="environmentalCondition" placeholder="Type here..." {...form.register('environmentalCondition')} />
-              {form.formState.errors.environmentalCondition && <p className="text-sm text-destructive">{form.formState.errors.environmentalCondition.message}</p>}
-            </div>
-
-            <div>
-              <Label htmlFor="photo">Your plant’s current photo</Label>
-              {imagePreview && (
-                <div className="mt-2 mb-2 w-full h-48 relative rounded-md overflow-hidden border">
-                  <Image src={imagePreview} alt="Preview" fill className="object-contain" />
-                </div>
-              )}
-              <label htmlFor="photo-upload" className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted hover:bg-muted/80">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <ImageIcon className="w-8 h-8 mb-2 text-muted-foreground" />
-                  <p className="mb-1 text-sm text-muted-foreground">Click to upload or drag a photo</p>
-                  <p className="text-xs text-muted-foreground">PNG, JPG, JPEG</p>
-                </div>
-                <Input id="photo-upload" type="file" className="hidden" accept="image/*" onChange={handlePhotoChange} />
-              </label>
-              {form.formState.errors.photo && <p className="text-sm text-destructive">{form.formState.errors.photo.message}</p>}
-            </div>
-
-            <Button type="submit" className="w-full" disabled={loading || fetchingPlants}>
-              {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> : <>Analyze with AI</>}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </Suspense>
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default ReportPage;

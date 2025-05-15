@@ -13,7 +13,7 @@ export default function TopNav() {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  if (pathname === "/onboarding" || pathname === "/report1" || pathname === "/report") return null;
+  if (pathname === "/onboarding" || pathname === "/report1" || pathname === "/report" || pathname === "/report2") return null;
 
   const handleLogout = async () => {
     await logout();
@@ -22,22 +22,20 @@ export default function TopNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-[393px] h-[76px] bg-[#328E6E] backdrop-blur flex justify-between items-center px-[16px] ml-[8px]">
-        <div className="container flex items-center gap-2">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="font-bold text-xl text-white">Hello Yuyun!</span>
-          </Link>
+      <header className="sticky top-0 z-50 w-full flex flex-col items-center bg-transparent">
+        <div className="w-full max-w-[393px] h-[76px] bg-[#328E6E] backdrop-blur flex justify-between items-center px-4 rounded-b-2xl">
+          <div className="flex flex-col">
+            <span className="font-bold text-xl text-white leading-tight">{user?.email ? `Hello ${user.email}!` : 'Hello!'}</span>
+            {user && <span className="text-white text-sm font-normal">Welcome to Tanamind!</span>}
+          </div>
+          {!loading && user && (
+            <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => setIsMenuOpen(true)}>
+              <Menu className="text-white h-6 w-6" />
+            </Button>
+          )}
         </div>
-        {!loading && user && (
-          <Button variant="ghost" className="h-9 w-9 p-0" onClick={() => {
-            setIsMenuOpen(true);
-          }}>
-            <Menu className="text-white h-6 w-6" />
-          </Button>
-        )}
       </header>
 
-      {/* Sidebar drawer */}
       <div
         className={`fixed top-0 right-0 h-full w-1/2 bg-white z-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
           isMenuOpen ? 'translate-x-0' : 'translate-x-full'
@@ -61,7 +59,6 @@ export default function TopNav() {
         </div>
       </div>
 
-      {/* Overlay */}
       {isMenuOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-40"

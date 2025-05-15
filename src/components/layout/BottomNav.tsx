@@ -14,7 +14,7 @@ const navItems = [
     icon: (
       <div className="relative flex flex-col items-center justify-center -mt-10 z-50">
         <button
-          className="w-20 h-20 rounded-full shadow-lg flex items-center justify-center border-4 border-[#A1DEC9] bg-[radial-gradient(circle,_#43BD92_0%,_#328E6E_100%)] translate-x-2"
+          className="w-20 h-20 rounded-full shadow-lg flex items-center justify-center border-4 border-[#A1DEC9] bg-[radial-gradient(circle,_#43BD92_0%,_#328E6E_100%)]"
         >
           <Image
             src="/assets/images/logoo.png"
@@ -24,7 +24,7 @@ const navItems = [
             className="rounded-full"
           />
         </button>
-        <span className="text-xs mt-2 text-[#328E6E] translate-x-2">Add Plants</span>
+        <span className="text-xs mt-2 text-[#328E6E]">Add Plants</span>
       </div>
     ),
   },
@@ -34,12 +34,11 @@ const navItems = [
 export default function BottomNav() {
   const pathname = usePathname();
 
-  // 👇 Jangan tampilkan jika sedang di halaman /onboarding atau /reports1
-  if (pathname === "/onboarding" || pathname === "/report1" || pathname === "/report") return null;
+  if (pathname === "/onboarding" || pathname === "/report1" || pathname === "/report" || pathname === "/report2") return null;
 
   return (
-    <nav className="fixed bottom-1 left-0 right-0 h-[108px] border-t bg-background shadow-top z-40 w-[393px] mx-auto">
-      <div className="flex h-full items-center justify-between px-6">
+    <nav className="fixed bottom-0 left-0 right-0 h-[108px] border-t bg-white shadow-inner z-40 w-full flex justify-center">
+      <div className="flex h-full items-center justify-between px-6 w-full max-w-[393px] mx-auto">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (

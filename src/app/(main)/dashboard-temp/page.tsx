@@ -10,72 +10,60 @@ import Image from "next/image";
 import { Suspense } from "react";
 
 export default function Page() {
-  return (
-    <div className="min-h-screen bg-white flex flex-col items-center w-full max-w-[393px] mx-auto overflow-hidden">
-      <div className="bg-[rgb(50,142,110)] p-4 rounded-b-3xl w-full relative" style={{ height: "350px" }}>
-        <div
-          className="absolute top-4 left-4 right-4"
-          style={{
-            background: "linear-gradient(353.24deg, #72CDAE -100.3%, #328E6E 113.41%)",
-            height: "49px",
-            borderRadius: "14px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 16px",
-            fontSize: "14px",
-            fontWeight: "500",
-            color: "white",
-          }}
-        >
-          <p className="text-xs">Watering Streak!</p>
-          <div className="text-sm">2025 ▾</div>
-        </div>
+  // Simulasi: tidak ada tanaman
+  const plants = [];
 
-        <Card className="rounded-lg bg-[#328E6E] text-white border-none shadow-none absolute left-1/2 transform -translate-x-1/2 top-[70px] w-[361px] h-[268px]">
-          <CardContent className="flex justify-center items-center bg-[#72CDAE] border-none shadow-none rounded-[14px] w-full h-full">
-            <Suspense>
+  return (
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
+      <div className="w-full max-w-[393px] min-h-screen bg-white flex flex-col items-center relative shadow-xl">
+        {/* Kalender */}
+        <div className="w-full flex flex-col items-center mt-8 px-2">
+          <div className="bg-gradient-to-b from-[#72CDAE] to-[#328E6E] rounded-2xl w-full max-w-[360px] mx-auto p-4 pt-3 shadow-lg relative">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-white text-sm font-medium opacity-70">Watering Calendar!</span>
+              <span className="text-white text-xs font-medium flex items-center gap-1">2025 <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+            </div>
+            <div className="bg-[#328E6E]/80 rounded-xl p-2 flex flex-col items-center justify-center min-h-[220px] w-full relative">
               <Calendar
                 mode="single"
                 selected={new Date()}
-                className="bg-transparent text-white text-xs w-[335px] h-[256px]"
+                className="bg-transparent text-white text-xs w-full"
               />
-            </Suspense>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="px-4 py-6 space-y-2 w-full max-w-[361px] h-[284px]">
-        <p className="text-md font-semibold">Your Plants!</p>
-        {[1, 2].map((item) => (
-          <div
-            key={item}
-            className="flex items-center p-2 rounded-lg shadow-sm bg-white w-full h-[80px] mb-[19px]"
-          >
-            <Image
-              src="/assets/images/sawi1.png"
-              alt="Sawi Plant"
-              width={50}
-              height={50}
-              className="rounded-lg"
-            />
-            <div className="ml-3 flex-1">
-              <p className="font-medium text-sm">Sawi Plant</p>
+              {plants.length === 0 && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                  <span className="bg-[#72CDAE] text-white text-xs px-4 py-1 rounded-lg shadow">No Plants found yet!</span>
+                </div>
+              )}
             </div>
-            <Button
-              size="sm"
-              className="bg-[#328E6E] hover:bg-[#5bb395] text-white"
-            >
-              Check
-            </Button>
           </div>
-        ))}
-      </div>
-
-      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-inner flex justify-around py-3 max-w-[393px] w-full mx-auto">
-        <div className="flex flex-col items-center text-green-600">
-          {/* Placeholder for icons */}
         </div>
+
+        {/* Ilustrasi dan pesan kosong */}
+        {plants.length === 0 && (
+          <div className="flex flex-col items-center justify-center flex-1 mt-8 mb-24 w-full">
+            <div className="w-full flex justify-center">
+              <Image
+                src="/assets/images/sad-plant.png"
+                alt="Sad Plant"
+                width={140}
+                height={140}
+                className="mb-4"
+                onError={(e) => {
+                  // @ts-ignore
+                  e.target.src = 'https://via.placeholder.com/140x140?text=No+Image';
+                }}
+              />
+            </div>
+            <span className="text-gray-400 text-base text-center">You haven't planted anything yet :(</span>
+          </div>
+        )}
+
+        {/* Bottom Navigation */}
+        <nav className="fixed bottom-0 left-0 right-0 h-[108px] border-t bg-white shadow-inner z-40 w-full flex justify-center">
+          <div className="flex h-full items-center justify-between px-6 w-full max-w-[393px] mx-auto">
+            {/* Isi dari BottomNav akan diinject oleh komponen global */}
+          </div>
+        </nav>
       </div>
     </div>
   );

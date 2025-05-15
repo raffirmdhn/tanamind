@@ -2,16 +2,24 @@
 import { db } from './client';
 import { doc, deleteDoc, collection, getDocs, writeBatch, query } from 'firebase/firestore';
 
-// Function to delete a plant and all its subcollections (growth_reports, watering_logs)
+/**
+ * Fungsi untuk menghapus tanaman dan semua subkoleksinya
+ * @param userId - ID pengguna
+ * @param plantId - ID tanaman yang akan dihapus
+ */
 export async function deletePlantAndSubcollections(userId: string, plantId: string): Promise<void> {
   const plantDocRef = doc(db, `users/${userId}/plants/${plantId}`);
 
-  // Helper function to delete all documents in a subcollection
+  /**
+   * Fungsi helper untuk menghapus semua dokumen dalam subkoleksi
+   * @param subcollectionName - Nama subkoleksi yang akan dihapus
+   */
   const deleteSubcollection = async (subcollectionName: string) => {
     const subcollectionRef = collection(db, `users/${userId}/plants/${plantId}/${subcollectionName}`);
     const q = query(subcollectionRef);
     const snapshot = await getDocs(q);
     
+    // Gunakan batch write untuk menghapus semua dokumen sekaligus
     const batch = writeBatch(db);
     snapshot.docs.forEach((doc) => {
       batch.delete(doc.ref);
@@ -20,18 +28,18 @@ export async function deletePlantAndSubcollections(userId: string, plantId: stri
   };
 
   try {
-    // Delete subcollections first
+    // Hapus subkoleksi terlebih dahulu
     await deleteSubcollection('growth_reports');
     await deleteSubcollection('watering_logs');
 
-    // Then delete the plant document itself
+    // Kemudian hapus dokumen tanaman
     await deleteDoc(plantDocRef);
     console.log(`Plant ${plantId} and its subcollections deleted successfully.`);
   } catch (error) {
     console.error("Error deleting plant and subcollections: ", error);
-    throw error; // Re-throw the error to be caught by the caller
+    throw error; // Re-throw error untuk ditangani oleh pemanggil
   }
 }
 
-// Add other Firestore utility functions here as needed
-// e.g., addPlant, getPlants, addGrowthReport, etc.
+// Tambahkan fungsi utilitas Firestore lainnya di sini
+// Contoh: addPlant, getPlants, addGrowthReport, dll.

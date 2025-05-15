@@ -13,6 +13,7 @@ import { collection, query, where, onSnapshot, orderBy } from "firebase/firestor
 import { db } from "@/lib/firebase/client";
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { FileText } from "lucide-react";
 
 
 export default function DashboardPage() {

@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Clock } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const ReportPage = () => {
   const [showModal, setShowModal] = useState(false);
+  const router = useRouter()
 
   return (
     <div className="flex flex-col justify-between min-h-screen bg-white px-4 pt-6 pb-4 relative">
@@ -77,6 +79,7 @@ const ReportPage = () => {
           Water Plant 🪣
         </Button>
         <Button
+        onClick={()=> router.push("")}
           className="w-full bg-[#328e6e] hover:bg-[#28765c] text-white font-medium text-sm rounded-xl h-10"
         >
           Report Growth Plant 📈

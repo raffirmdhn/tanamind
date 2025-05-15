@@ -44,7 +44,7 @@ export default function OnboardingPage() {
     1: "/assets/images/logo8.svg",
     2: "/assets/images/logo10.svg",
     3: "/assets/images/logo11.svg",
-    4: "/assets/images/logo14.svg",
+    4: "/assets/images/sawi2.png",
   };
 
   const stepInfos: { [key: number]: string } = {
@@ -58,19 +58,21 @@ export default function OnboardingPage() {
   const steps = [
     {
       content: (
-        <div className="flex gap-4 mt-11">
-          <CardOption
-            image="/assets/images/logo10.svg"
-            label="Sawi Hijau"
-            selected={selectedVariety === "Sawi Hijau"}
-            onClick={() => setSelectedVariety("Sawi Hijau")}
-          />
-          <CardOption
-            image="/assets/images/logo11.svg"
-            label="Sawi Putih"
-            selected={selectedVariety === "Sawi Putih"}
-            onClick={() => setSelectedVariety("Sawi Putih")}
-          />
+        <div className="flex flex-col items-center w-full mt-8">
+          <div className="flex flex-row justify-center gap-8 w-full">
+            <CardOption
+              image="/assets/images/sawi-hijau.png"
+              label="Sawi Hijau"
+              selected={selectedVariety === "Sawi Hijau"}
+              onClick={() => setSelectedVariety("Sawi Hijau")}
+            />
+            <CardOption
+              image="/assets/images/sawi-putih.png"
+              label="Sawi Putih"
+              selected={selectedVariety === "Sawi Putih"}
+              onClick={() => setSelectedVariety("Sawi Putih")}
+            />
+          </div>
         </div>
       ),
     },
@@ -115,15 +117,17 @@ export default function OnboardingPage() {
           <button
             onClick={() => router.push("/main/dashboard-temp")}
             className="absolute left-0 text-[#328E6E] text-2xl font-bold cursor-pointer"
+            aria-label="Back"
           >
             &lt;
           </button>
-          <span className="text-sm text-black font-medium text-center">
+          <span className="text-base text-black font-medium text-center">
             {stepInfos[currentStep]}
           </span>
         </div>
 
-        <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+        {/* Progress Bar */}
+        <div className="w-full h-1 bg-gray-200 rounded-full overflow-hidden mb-6">
           <div
             className="h-full transition-all"
             style={{
@@ -133,8 +137,7 @@ export default function OnboardingPage() {
           />
         </div>
 
-        {step?.title && <h1 className="text-center text-xl font-bold mt-6">{step?.title}</h1>}
-
+        {/* Step 0: Tidak ada ilustrasi besar */}
         {currentStep > 0 && currentStep <= 4 && (
           <div className="flex flex-col items-center my-2">
             {currentStep === 4 && (
@@ -154,10 +157,12 @@ export default function OnboardingPage() {
         <div className="space-y-4 mt-4">{step.content}</div>
       </div>
 
+      {/* Tombol Next sticky di bawah */}
       <div className="fixed bottom-0 left-0 right-0 px-4 pb-4 space-y-2 max-w-md mx-auto">
         <button
           onClick={currentStep < steps.length - 1 ? next : () => setCurrentStep(0)}
           className="w-full bg-[#328E6E] hover:bg-[#28735a] text-white py-3 rounded-md font-medium text-sm"
+          disabled={currentStep === 0 && !selectedVariety}
         >
           {currentStep === 3
             ? "Plant Now"

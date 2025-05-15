@@ -11,43 +11,28 @@ import { Suspense } from "react";
 
 export default function Page() {
     return (
-        <div className="min-h-screen bg-white flex flex-col">
-            {/* Bagian atas dengan background hijau dan lengkungan bawah */}
-            <div className="bg-[#328E6E] p-4 rounded-b-3xl">
-                {/* Header */}
-                <div className="bg-[#72CDAE] text-white p-4 rounded-xl shadow-md">
-                    <div className="flex justify-between items-center">
-                        <div className="text-sm">2025 ▾</div>
+        <div className="min-h-screen bg-white flex flex-col items-center w-full max-w-[393px] mx-auto overflow-hidden">
+            {/* Bagian atas dengan background gradasi hijau dan sudut membulat */}
+            <div className="w-full flex flex-col items-center mt-4 px-2">
+                <div className="bg-gradient-to-b from-[#72CDAE] to-[#328E6E] rounded-2xl w-full max-w-[360px] mx-auto p-4 pt-3 shadow-lg relative">
+                    <div className="flex justify-between items-center mb-2">
+                        <span className="text-white text-sm font-medium opacity-70">Watering Streak!</span>
+                        <span className="text-white text-xs font-medium flex items-center gap-1">2025 <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
                     </div>
-                    <p className="text-sm mt-1">Watering Streak!</p>
+                    <div className="bg-[#328E6E]/80 rounded-xl p-2 flex flex-col items-center justify-center min-h-[220px] w-full relative">
+                        <Suspense>
+                            <Calendar
+                                mode="single"
+                                selected={new Date()}
+                                className="bg-transparent text-white text-xs w-full"
+                            />
+                        </Suspense>
+                    </div>
                 </div>
-
-                {/* Kalender */}
-        <Card className="mt-4 rounded-2xl shadow-md bg-[#72CDAE] text-white border-none">
-        <CardHeader>
-            <CardTitle className="text-center text-md text-white tracking-wide">MAY</CardTitle>
-        </CardHeader>
-        <CardContent className="flex justify-center">
-            <Suspense>
-            <Calendar
-                mode="single"
-                selected={new Date()}
-                className="
-                bg-transparent text-white
-                [&_.rdp-day_selected]:bg-[#45C0FF]
-                [&_.rdp-day_selected]:text-white
-                [&_.rdp-day_today]:border-none
-                [&_.rdp-day]:border-none
-                [&_.rdp]:border-none
-                "
-            />
-            </Suspense>
-        </CardContent>
-        </Card>
             </div>
 
             {/* Your Plants - di luar kotak hijau */}
-            <div className="px-4 py-5 space-y-3 bg-white">
+            <div className="px-4 py-5 space-y-3 bg-white w-full max-w-[360px] mx-auto">
                 <p className="text-md font-semibold">Your Plants!</p>
                 {[1, 2].map((item) => (
                     <Card key={item} className="flex items-center p-2 shadow-sm">
@@ -66,13 +51,6 @@ export default function Page() {
                         </Button>
                     </Card>
                 ))}
-            </div>
-
-            {/* Bottom Navigation */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white shadow-inner flex justify-around py-3">
-                <div className="flex flex-col items-center text-green-600">
-                    {/* Placeholder for icons */}
-                </div>
             </div>
         </div>
     );
