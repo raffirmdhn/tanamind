@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { auth, googleAuthProvider } from "@/lib/firebase/client";
 import { signInWithPopup } from "firebase/auth";
 import { Leaf } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import * as z from "zod";
@@ -43,8 +44,9 @@ export default function LoginForm() {
   return (
     <div className='w-full max-w-sm p-8 space-y-6 bg-card rounded-xl shadow-xl'>
       <div className='flex flex-col items-center space-y-2'>
-        <Leaf className='w-12 h-12 text-primary' />
-        <h1 className='text-3xl font-bold text-primary'>Masuk ke Tanamind</h1>
+        <Image width={194} height={73} src='/assets/images/logo-tanamind.png' alt='Logo Text' />
+        {/* <Leaf className='w-12 h-12 text-primary' />
+        <h1 className='text-3xl font-bold text-primary'>Masuk ke Tanamind</h1> */}
         <p className='text-muted-foreground text-center'>Pantau pertumbuhan tanaman Anda.</p>
       </div>
 

@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'SawiKu - Pelaporan Pertumbuhan Tanaman',
-  description: 'Aplikasi untuk memantau dan mendapatkan saran pertumbuhan tanaman Sawi Hijau.',
+  title: 'Tanamind - Pertumbuhan Tanaman',
+  description: 'Aplikasi untuk memantau dan mendapatkan saran pertumbuhan tanaman.',
 };
 
 export default function RootLayout({
