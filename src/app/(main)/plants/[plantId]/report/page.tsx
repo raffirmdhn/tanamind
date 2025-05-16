@@ -207,7 +207,8 @@ export default function PlantReportPage() {
   // Defining which week it is based on the planting date
   const reportDate = new Date();
   const diffInMs = reportDate.getTime() - (plant?.plantingDate.toDate().getTime() || 0);
-  const currentWeek = Math.floor(diffInMs / (1000 * 60 * 60 * 24 * 7)) + 1; // Tambahkan 1 untuk menghitung minggu pertama
+  let currentWeek = Math.floor(diffInMs / (1000 * 60 * 60 * 24 * 7)) + 1;
+  if (currentWeek <= 0) currentWeek = 1; // If week 0 or negative, set to week 1
   const filteredQuestions = useMemo(
     () => reportQuestion.filter(q => q.week.includes(currentWeek)),
     [currentWeek]
