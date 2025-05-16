@@ -34,9 +34,9 @@ export default function MainAppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className='flex flex-col h-full'>
+    <div className='flex flex-col h-screen'>
       <TopNav />
-      <main className='flex-grow overflow-y-auto pb-20'>
+      <main className='overflow-y-auto' style={{ height: "calc(100vh - 64px - 80px)" }}>
         {/* pb-20 to make space for bottom nav, pt-4 for spacing from top nav */}
         {children}
       </main>

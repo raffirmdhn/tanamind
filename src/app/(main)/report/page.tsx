@@ -13,7 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { submitGrowthReportAction } from '@/actions/reportActions'; // Server Action
 import { ArrowLeft, Lightbulb, Image as ImageIcon, HelpCircle, Loader2, Send } from 'lucide-react';
 import Image from 'next/image';
 import { Switch } from "@/components/ui/switch";
@@ -21,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Plant } from '@/types';
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase/client";
+import { submitGrowthReportAction } from '@/actions/reportAction';
 
 const reportSchema = z.object({
   plantId: z.string().min(1, { message: "Pilih tanaman terlebih dahulu." }),

@@ -1,5 +1,5 @@
-// src/app/(main)/plants/add/page.tsx
 "use client";
+import { addPlant } from "@/actions/plantAction";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,14 +16,10 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { db, storage } from "@/lib/firebase/client";
 import { cn } from "@/lib/utils";
-import type { Plant } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { ArrowLeft, CalendarIcon, Sprout } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -37,12 +33,12 @@ const plantSchema = z.object({
     .string()
     .min(3, { message: "Spesies tanaman minimal 3 karakter." })
     .default("Sawi Hijau"),
-  datePlanted: z.date({ required_error: "Tanggal tanam wajib diisi." }),
+  plantingDate: z.date({ required_error: "Tanggal tanam wajib diisi." }),
   notes: z.string().optional(),
   photo: z.instanceof(FileList).optional(),
 });
 
-type PlantFormValues = z.infer<typeof plantSchema>;
+export type PlantFormValues = z.infer<typeof plantSchema>;
 
 export default function AddPlantPage() {
   const { user } = useAuth();
@@ -56,7 +52,7 @@ export default function AddPlantPage() {
     defaultValues: {
       name: "",
       species: "Sawi Hijau",
-      datePlanted: new Date(),
+      plantingDate: new Date(),
       notes: "",
     },
   });
@@ -80,47 +76,24 @@ export default function AddPlantPage() {
     }
     setLoading(true);
 
-    let photoURL: string | undefined = undefined;
-    if (data.photo && data.photo.length > 0) {
-      const file = data.photo[0];
-      const storageRef = ref(storage, `users/${user.uid}/plants/${Date.now()}_${file.name}`);
-      try {
-        const snapshot = await uploadBytes(storageRef, file);
-        photoURL = await getDownloadURL(snapshot.ref);
-      } catch (error) {
-        console.error("Error uploading photo: ", error);
-        toast({
-          title: "Upload Foto Gagal",
-          description: "Gagal mengunggah foto tanaman.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-    }
+    const result = await addPlant({
+      name: data.name,
+      plantingDate: data.plantingDate,
+      species: data.species,
+      notes: data.notes,
+      photo: data.photo ? data.photo[0] : undefined,
+      userId: user.uid,
+    });
+    setLoading(false);
 
-    try {
-      const plantData: Omit<Plant, "id"> = {
-        userId: user.uid,
-        name: data.name,
-        species: data.species,
-        // @ts-expect-error
-        datePlanted: serverTimestamp.fromDate(data.datePlanted),
-        notes: data.notes,
-        photoURL: photoURL,
-      };
-      await addDoc(collection(db, `users/${user.uid}/plants`), plantData);
-      toast({ title: "Tanaman Ditambahkan!", description: `${data.name} berhasil ditambahkan.` });
+    toast({
+      title: result.message,
+      description: result.description,
+      // @ts-expect-error
+      variant: result.variant,
+    });
+    if (result.success) {
       router.push("/dashboard");
-    } catch (error: any) {
-      console.error("Error adding plant:", error);
-      toast({
-        title: "Gagal Menambah Tanaman",
-        description: error.message || "Terjadi kesalahan.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -167,35 +140,36 @@ export default function AddPlantPage() {
           </div>
 
           <div className='space-y-2'>
-            <Label htmlFor='datePlanted'>Tanggal Tanam</Label>
+            <Label htmlFor='plantingDate'>Tanggal Tanam</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant={"outline"}
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !form.watch("datePlanted") && "text-muted-foreground"
+                    !form.watch("plantingDate") && "text-muted-foreground"
                   )}>
                   <CalendarIcon className='mr-2 h-4 w-4' />
-                  {format(form.watch("datePlanted"), "PPP", {
-                    locale: id,
-                  })}
+                  {!!form.watch("plantingDate") &&
+                    format(form.watch("plantingDate"), "PPP", {
+                      locale: id,
+                    })}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className='w-auto p-0'>
                 <Calendar
                   mode='single'
-                  selected={form.watch("datePlanted")}
+                  selected={form.watch("plantingDate")}
                   onSelect={date =>
-                    form.setValue("datePlanted", date as Date, { shouldValidate: true })
+                    form.setValue("plantingDate", date as Date, { shouldValidate: true })
                   }
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
-            {form.formState.errors.datePlanted && (
+            {form.formState.errors.plantingDate && (
               <p className='text-sm text-destructive'>
-                {form.formState.errors.datePlanted.message}
+                {form.formState.errors.plantingDate.message}
               </p>
             )}
           </div>

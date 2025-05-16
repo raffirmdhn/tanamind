@@ -1,36 +1,50 @@
 // src/lib/firebase/firestore.ts
-import { db } from './client';
-import { doc, deleteDoc, collection, getDocs, writeBatch, query } from 'firebase/firestore';
+import { Plant } from "@/types";
+import { db as dbClient } from "./client";
+import {
+  doc,
+  deleteDoc,
+  collection,
+  getDocs,
+  writeBatch,
+  query,
+  Firestore,
+  onSnapshot,
+} from "firebase/firestore";
 
-// Function to delete a plant and all its subcollections (growth_reports, watering_logs)
-export async function deletePlantAndSubcollections(userId: string, plantId: string): Promise<void> {
-  const plantDocRef = doc(db, `users/${userId}/plants/${plantId}`);
+// Function to get all plants for a user
+export async function getPlants(db: Firestore = dbClient, userId: string): Promise<any[]> {
+  const plantsRef = collection(db, `users/${userId}/plants`);
+  const q = query(plantsRef);
+  const snapshot = await getDocs(q);
 
-  // Helper function to delete all documents in a subcollection
-  const deleteSubcollection = async (subcollectionName: string) => {
-    const subcollectionRef = collection(db, `users/${userId}/plants/${plantId}/${subcollectionName}`);
-    const q = query(subcollectionRef);
-    const snapshot = await getDocs(q);
-    
-    const batch = writeBatch(db);
-    snapshot.docs.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-    await batch.commit();
-  };
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
 
-  try {
-    // Delete subcollections first
-    await deleteSubcollection('growth_reports');
-    await deleteSubcollection('watering_logs');
-
-    // Then delete the plant document itself
-    await deleteDoc(plantDocRef);
-    console.log(`Plant ${plantId} and its subcollections deleted successfully.`);
-  } catch (error) {
-    console.error("Error deleting plant and subcollections: ", error);
-    throw error; // Re-throw the error to be caught by the caller
+export async function getPlantsSnapshot(cb: (data: Plant[]) => void, userId?: string) {
+  if (typeof cb !== "function") {
+    console.log("Error: The callback parameter is not a function");
+    return [];
   }
+  if (!userId) {
+    console.log("Error: userId is undefined");
+    return [];
+  }
+
+  const plantsRef = collection(dbClient, `users/${userId}/plants`);
+  const q = query(plantsRef);
+
+  return onSnapshot(q, querySnapshot => {
+    const results = querySnapshot.docs.map(doc => {
+      return {
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp.toDate(),
+      };
+    }) as unknown as Plant[];
+
+    cb(results);
+  });
 }
 
 // Add other Firestore utility functions here as needed

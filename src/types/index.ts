@@ -15,10 +15,20 @@ export interface Plant {
   userId: string;
   name: string;
   species: string; // e.g., "Sawi Hijau"
-  datePlanted: Timestamp;
-  lastReportDate?: Timestamp;
-  photoURL?: string; // Main photo of the plant
+  plantingDate: Timestamp;
+  imageUrl?: string; // Main photo of the plant
   notes?: string;
+  conditionRate?: string; // e.g., "A"
+  kode?: string;
+  
+  // Additional fields for plant care
+  lastWateringDate?: Timestamp;
+  
+  // Additional fields for plant growth tracking
+  additionalNotes?: string;
+  recommendedActions?: string;
+  lastGrowthReportDate?: Timestamp;
+  lastGrowthReportImageUrl?: string;
 }
 
 export interface GrowthReport {

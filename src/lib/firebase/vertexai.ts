@@ -1,10 +1,5 @@
-// src/lib/firebase/client.ts
-"use client";
-
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getGenerativeModel, getVertexAI } from "firebase/vertexai";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -17,10 +12,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-const googleAuthProvider = new GoogleAuthProvider();
 
-export { app, auth, db, googleAuthProvider, storage };
+// Initialize the Vertex AI service
+const vertexAI = getVertexAI(app);
 
+// Create a `GenerativeModel` instance with a model that supports your use case
+export const model = getGenerativeModel(vertexAI, { model: "gemini-2.0-flash" });

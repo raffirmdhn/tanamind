@@ -1,32 +1,19 @@
 // src/app/(main)/plants/[plantId]/page.tsx
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, collection, query, where, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase/client';
-import { useAuth } from '@/context/AuthContext';
-import type { Plant, GrowthReport, WateringLog } from '@/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Image from 'next/image';
-import { ArrowLeft, CalendarDays, Sprout, FileText, Droplets, PlusCircle, Edit3, Trash2, Loader2 } from 'lucide-react';
-import Link from 'next/link';
-import { format } from 'date-fns';
-import { id as dateLocaleId } from 'date-fns/locale';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { deletePlantAndSubcollections } from '@/lib/firebase/firestore'; // To be created
-import { useToast } from '@/hooks/use-toast';
+import { deletePlant, wateringPlant } from "@/actions/plantAction";
+import AnalyzedResult from "@/components/PlantReport/AnalyzedResult";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { usePlantData } from "@/hooks/usePlantData";
+import { formatWateringDate } from "@/lib/date-fns";
+import { format } from "date-fns";
+import { Calendar, Clock, Loader2 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function PlantDetailPage() {
   const params = useParams();
@@ -35,182 +22,182 @@ export default function PlantDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const [plant, setPlant] = useState<Plant | null>(null);
-  const [growthReports, setGrowthReports] = useState<GrowthReport[]>([]);
-  const [wateringLogs, setWateringLogs] = useState<WateringLog[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user || !plantId) return;
-
-    setLoading(true);
-    // Fetch plant details
-    const plantDocRef = doc(db, `users/${user.uid}/plants/${plantId}`);
-    const unsubPlant = onSnapshot(plantDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setPlant({ id: docSnap.id, ...docSnap.data() } as Plant);
-      } else {
-        toast({ title: "Error", description: "Tanaman tidak ditemukan.", variant: "destructive" });
-        router.push('/dashboard');
-      }
-      setLoading(false);
-    }, (error) => {
-        console.error("Error fetching plant details:", error);
-        toast({ title: "Error", description: "Gagal memuat detail tanaman.", variant: "destructive" });
-        setLoading(false);
-    });
-
-    // Fetch growth reports
-    const reportsRef = collection(db, `users/${user.uid}/plants/${plantId}/growth_reports`);
-    const reportsQuery = query(reportsRef, orderBy("reportDate", "desc"));
-    const unsubReports = onSnapshot(reportsQuery, (snapshot) => {
-      setGrowthReports(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as GrowthReport)));
-    });
-
-    // Fetch watering logs
-    const logsRef = collection(db, `users/${user.uid}/plants/${plantId}/watering_logs`);
-    const logsQuery = query(logsRef, orderBy("wateredDate", "desc"));
-    const unsubLogs = onSnapshot(logsQuery, (snapshot) => {
-      setWateringLogs(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as WateringLog)));
-    });
-    
-    return () => {
-      unsubPlant();
-      unsubReports();
-      unsubLogs();
-    };
-  }, [user, plantId, router, toast]);
+  // Fetch plant data
+  const { growthReports, loading, plant, wateringLogs } = usePlantData(user?.uid, plantId);
 
   const handleDeletePlant = async () => {
     if (!user || !plant) return;
-    try {
-      await deletePlantAndSubcollections(user.uid, plant.id);
-      toast({ title: "Tanaman Dihapus", description: `${plant.name} berhasil dihapus.` });
-      router.push('/dashboard');
-    } catch (error) {
-      console.error("Error deleting plant:", error);
-      toast({ title: "Gagal Menghapus", description: "Tidak dapat menghapus tanaman.", variant: "destructive" });
+
+    if (!confirm("Apakah Anda yakin ingin menghapus tanaman ini?")) {
+      toast({
+        title: "Penghapusan Dibatalkan",
+        description: "Tanaman tidak dihapus.",
+        variant: "default",
+      });
+      return;
+    }
+
+    const result = await deletePlant({
+      userId: user.uid,
+      plantId: plant.id,
+    });
+    toast({
+      title: result.message,
+      description: result.description,
+      // @ts-expect-error
+      variant: result.variant,
+    });
+    if (result.success) {
+      router.push("/dashboard");
     }
   };
 
+  const [isHandlingWaterPlant, setIsHandlingWaterPlant] = useState(false);
+
+  const handleWaterPlant = async () => {
+    if (
+      plant &&
+      plant.lastWateringDate &&
+      format(plant.lastWateringDate.toDate(), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd")
+    ) {
+      toast({
+        title: "Tanaman Sudah Disiram",
+        description: `${plant.name} sudah disiram hari ini.`,
+        variant: "default",
+      });
+      return;
+    }
+
+    if (!user || !plant) return;
+    setIsHandlingWaterPlant(true);
+
+    const result = await wateringPlant({ plantId: plant.id, userId: user.uid });
+    toast({
+      title: result.message,
+      description: result.description,
+      // @ts-expect-error
+      variant: result.variant,
+    });
+    setIsHandlingWaterPlant(false);
+  };
+
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /> <span className="ml-2">Memuat detail tanaman...</span></div>;
+    return (
+      <div className='flex justify-center items-center h-64'>
+        <Loader2 className='h-8 w-8 animate-spin text-primary' />{" "}
+        <span className='ml-2'>Memuat detail tanaman...</span>
+      </div>
+    );
   }
 
   if (!plant) {
-    return <div className="text-center p-4">Tanaman tidak ditemukan.</div>;
+    return <div className='text-center p-4'>Tanaman tidak ditemukan.</div>;
   }
 
-  const formatDate = (timestamp?: Timestamp) => {
-    if (!timestamp) return 'N/A';
-    return format(timestamp.toDate(), 'dd MMM yyyy, HH:mm', { locale: dateLocaleId });
-  };
+  const isWateredToday =
+    !!plant.lastWateringDate &&
+    format(plant.lastWateringDate.toDate(), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
+  const isGrowthReportToday =
+    !!plant.lastGrowthReportDate &&
+    format(plant.lastGrowthReportDate.toDate(), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
 
   return (
-    <div className="space-y-6">
-      <Card className="overflow-hidden">
-        <CardHeader className="p-0 relative">
-           <Button variant="ghost" size="icon" onClick={() => router.back()} className="absolute top-3 left-3 z-10 bg-background/70 hover:bg-background/90 rounded-full">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          {plant.photoURL && (
-            <div className="w-full h-60 relative">
-              <Image src={plant.photoURL} alt={plant.name} layout="fill" objectFit="cover" data-ai-hint="plant" />
-            </div>
-          )}
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-2xl mb-1">{plant.name}</CardTitle>
-              <CardDescription className="text-md text-muted-foreground flex items-center gap-1 mb-1">
-                <Sprout className="h-5 w-5 text-green-500" />
-                {plant.species}
-              </CardDescription>
-              <CardDescription className="text-sm text-muted-foreground flex items-center gap-1">
-                <CalendarDays className="h-4 w-4" />
-                Ditanam: {plant.datePlanted ? format(plant.datePlanted.toDate(), 'dd MMMM yyyy', { locale: dateLocaleId }) : 'N/A'}
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              {/* <Button variant="outline" size="icon" disabled> <Edit3 className="h-4 w-4" /> */}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="icon"> <Trash2 className="h-4 w-4" /> </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Anda yakin?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Tindakan ini akan menghapus tanaman "{plant.name}" beserta semua laporan dan log penyiramannya. Data tidak dapat dipulihkan.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeletePlant} className="bg-destructive hover:bg-destructive/90">Hapus</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
-          {plant.notes && <p className="mt-3 text-sm text-foreground bg-muted/50 p-3 rounded-md">{plant.notes}</p>}
-        </CardContent>
-         <CardFooter className="flex gap-2 p-4 border-t">
-            <Button asChild className="flex-1">
-              <Link href={`/report?plantId=${plant.id}`}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Lapor Pertumbuhan
-              </Link>
-            </Button>
-            <Button variant="outline" className="flex-1" disabled> {/* Placeholder for watering log */}
-              <Droplets className="mr-2 h-4 w-4" /> Catat Penyiraman
-            </Button>
-          </CardFooter>
-      </Card>
-
-      <div>
-        <h3 className="text-xl font-semibold mb-2 flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /> Laporan Pertumbuhan</h3>
-        {growthReports.length === 0 ? (
-          <p className="text-muted-foreground">Belum ada laporan pertumbuhan.</p>
-        ) : (
-          <div className="space-y-3">
-            {growthReports.map(report => (
-              <Card key={report.id}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-md">Laporan {formatDate(report.reportDate)}</CardTitle>
-                  {report.photoURL && (
-                     <div className="w-full h-40 relative rounded-md overflow-hidden my-2">
-                        <Image src={report.photoURL} alt={`Laporan ${report.id}`} layout="fill" objectFit="cover" data-ai-hint="plant growth stage" />
-                    </div>
-                  )}
-                </CardHeader>
-                <CardContent className="text-sm space-y-1">
-                  {report.question && <p><strong>Pertanyaan:</strong> {report.question}</p>}
-                  {report.advice && <p><strong>Saran AI:</strong> {report.advice}</p>}
-                  {report.notes && <p><strong>Catatan:</strong> {report.notes}</p>}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+    <div className='flex flex-col justify-between flex-grow bg-white items-center px-4 pt-6 pb-[40px] min-h-full'>
+      {/* Header */}
+      <div className='w-full max-w-sm flex items-center justify-between px-2 mb-[40px]'>
+        <Link href='/dashboard'>
+          <span className='text-[#328e6e] text-2xl font-bold cursor-pointer'>&lt;</span>
+        </Link>
+        <h2 className='text-base font-medium text-gray-800'>{plant.name}</h2>
+        <div className='w-5 h-5' />
       </div>
 
-      <div>
-        <h3 className="text-xl font-semibold mb-2 flex items-center gap-2"><Droplets className="h-5 w-5 text-blue-500" /> Log Penyiraman</h3>
-        {wateringLogs.length === 0 ? (
-          <p className="text-muted-foreground">Belum ada log penyiraman.</p>
-        ) : (
-          <div className="space-y-3">
-            {wateringLogs.map(log => (
-              <Card key={log.id}>
-                <CardContent className="p-3 text-sm">
-                  <p>Disiram pada: {formatDate(log.wateredDate)}</p>
-                  {log.amount && <p>Jumlah: {log.amount} ml</p>}
-                  {log.notes && <p>Catatan: {log.notes}</p>}
-                </CardContent>
-              </Card>
-            ))}
+      {/* Gambar Tanaman */}
+      <div className='w-full max-w-sm rounded-2xl overflow-hidden mb-[40px]'>
+        <Image
+          src={plant.lastGrowthReportImageUrl || plant.imageUrl || "/assets/images/sawi1.png"}
+          alt='Sawi Plant'
+          width={340}
+          height={200}
+          className='w-full h-[170px] object-cover rounded-2xl'
+        />
+      </div>
+
+      {/* Informasi Penyiraman & Penanaman */}
+      <div className='w-full max-w-sm flex justify-between items-center mb-4'>
+        <div className='w-[158px] h-[60px] border border-[#328e6e] rounded-xl flex items-center px-3'>
+          <Clock className='w-4 h-4 text-[#328e6e] mr-2' />
+          <div>
+            <p className='text-[11px] text-gray-500'>Last watered</p>
+            <p className='text-xs font-medium text-gray-800 capitalize'>
+              {plant.lastWateringDate
+                ? formatWateringDate(plant.lastWateringDate.toDate())
+                : "Never watered yet"}
+            </p>
           </div>
-        )}
+        </div>
+        <div className='w-[158px] h-[60px] border border-[#328e6e] rounded-xl flex items-center px-3'>
+          <Calendar className='w-4 h-4 text-[#328e6e] mr-2' />
+          <div>
+            <p className='text-[11px] text-gray-500'>Last reported</p>
+            <p className='text-xs font-medium text-gray-800 capitalize'>
+              {plant.lastGrowthReportDate
+                ? formatWateringDate(plant.lastGrowthReportDate.toDate())
+                : "Never reported yet"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className='w-full h-[60px] border border-[#328e6e] rounded-xl flex items-center px-3 mb-3'>
+        <Calendar className='w-4 h-4 text-[#328e6e] mr-2' />
+        <div>
+          <p className='text-[11px] text-gray-500'>Planted on</p>
+          <p className='text-sm font-medium text-gray-800'>
+            {plant.plantingDate
+              ? format(plant.plantingDate.toDate(), "dd MMM yyyy")
+              : "Tanggal tidak tersedia"}
+          </p>
+        </div>
+      </div>
+
+      {/* Kondisi Tanaman */}
+      {!!plant.conditionRate && (
+        <AnalyzedResult
+          analyzedReport={{
+            grade: plant.conditionRate,
+            additionalNotes: plant.additionalNotes ?? "",
+            recommendedActions: plant.recommendedActions ?? "",
+          }}
+        />
+      )}
+
+      {/* Tombol Aksi */}
+      <div className='w-full max-w-sm flex flex-col gap-3 mt-auto'>
+        <Button
+          onClick={handleWaterPlant}
+          disabled={isHandlingWaterPlant || isWateredToday}
+          variant='outline'
+          className='w-full border border-[#328e6e] text-[#328e6e] hover:bg-[#e3f6f1] font-medium text-sm rounded-xl h-10'>
+          Water Plant 🪣
+        </Button>
+
+        <Button
+          disabled={isGrowthReportToday}
+          className='w-full bg-[#328e6e] hover:bg-[#28765c] text-white font-medium text-sm rounded-xl h-10'>
+          <Link
+            onClick={e => isGrowthReportToday && e.preventDefault()}
+            href={`/plants/${plantId}/report`}>
+            Report Growth Plant 📈
+          </Link>
+        </Button>
+
+        <Button
+          onClick={handleDeletePlant}
+          variant='outline'
+          className='w-full border border-[#f44336] text-[#f44336] hover:bg-[#fdeaea] font-medium text-sm rounded-xl h-10'>
+          Delete Plant ❌
+        </Button>
       </div>
     </div>
   );

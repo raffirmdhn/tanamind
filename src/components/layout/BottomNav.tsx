@@ -9,8 +9,7 @@ import Image from "next/image";
 const navItems = [
   { href: '/dashboard', label: 'Home', icon: <Home className="h-6 w-6" /> },
   {
-    href: "/report",
-    label: "Add Plants",
+    href: "/plants/add",
     icon: (
       <div className="relative flex flex-col items-center justify-center -mt-10 z-50">
         <button

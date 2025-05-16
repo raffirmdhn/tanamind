@@ -44,7 +44,7 @@ export default function OnboardingPage() {
     1: "/assets/images/logo8.svg",
     2: "/assets/images/logo10.svg",
     3: "/assets/images/logo11.svg",
-    4: "/assets/images/logo14.svg",
+    4: "/assets/images/sawi2.png",
   };
 
   const stepInfos: { [key: number]: string } = {
