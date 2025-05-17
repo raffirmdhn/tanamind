@@ -27,7 +27,7 @@ const navItems = [
       </div>
     ),
   },
-  { href: '/onboarding', label: 'Notification', icon: <Bell className="h-6 w-6" /> },
+  { href: '#', label: 'Notification', icon: <Bell className="h-6 w-6" /> },
 ];
 
 export default function BottomNav() {

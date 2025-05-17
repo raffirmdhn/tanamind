@@ -38,7 +38,6 @@ export default function Page() {
               </div>
             </div>
           ))}
-
         {/* Header */}
         <div className='bg-[#72CDAE] text-white p-4 rounded-xl shadow-md'>
           <div className='flex justify-between items-center'>
@@ -46,7 +45,6 @@ export default function Page() {
             <div className='text-sm'>2025</div>
           </div>
         </div>
-
         {/* Kalender */}
         <Card className='mt-2 rounded-lg shadow bg-[#72CDAE] text-white border-none px-2 py-1'>
           <CardContent className='flex justify-center p-0'>

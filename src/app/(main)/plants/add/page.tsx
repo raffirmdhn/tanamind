@@ -107,7 +107,7 @@ export default function AddPlantPage() {
           <Sprout className='h-8 w-8 text-primary' />
           <div>
             <CardTitle className='text-2xl'>Tambah Tanaman Baru</CardTitle>
-            <CardDescription>Isi detail tanaman Sawi Hijau Anda.</CardDescription>
+            <CardDescription>Isi detail tanaman Anda.</CardDescription>
           </div>
         </div>
       </CardHeader>
